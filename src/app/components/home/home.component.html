@@ -1,0 +1,39 @@
+<header id="header" class="center">
+  <div>
+    <p> Generated Objects in JavaScript <span id="version"></span></p>
+  </div>
+</header>
+<div class="container">
+  <div class="abs-center">
+    <div class="form-group">
+      <div class="input-group">
+        <textarea style="border: 3px solid #cccccc;" class="form-controln " [(ngModel)]="cadena" name="cadena" rows="9"
+          cols="50"></textarea><br>
+      </div><br>
+      <button (click)="evaluar()" class="btn btn-outline-primary btn-lg" type="submit">Evaluar</button>
+    </div>
+  </div>
+</div>
+
+<div id="process">
+  <div>
+    <h2>Tokens</h2>
+    <div id="tokens-msg" class="message success" *ngIf="message == 'Succesfully tokerized'; else elseBlock">
+      <p class="messages succes">{{message}}</p>
+    </div>
+    <ng-template #elseBlock>
+      <p class="messages error">{{message}}</p>
+    </ng-template>
+    <textarea id="tokens" readonly rows="7" autofocus>{{data | json}}</textarea>
+  </div>
+  <div>
+    <h2>Sintax</h2>
+    <div id="tokens-msg" class="message success" *ngIf="message == 'Succesfully tokerized'; else elseBlock">
+      <p class="messages succes">{{message}}</p>
+    </div>
+    <ng-template #elseBlock>
+      <p class="messages error">{{message}}</p>
+    </ng-template>
+    <textarea id="tokens" readonly rows="7" autofocus>{{data | json}}</textarea>
+  </div>
+</div>
