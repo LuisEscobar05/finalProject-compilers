@@ -1,30 +1,9 @@
-svg {
-    height: 100%;
-    width: 100%;
-  }
   
   #header {
     font-family: Baskerville, 'Times New Roman', serif;
     padding:5px;
   }
   
-  #header a {
-    color: #000;
-  }
-  
-  #header h1{
-    font-size:2.5em;
-    white-space: nowrap;
-    font-style: italic;
-    margin-right:20px;
-    margin-bottom:0px;
-    margin-top:10px;
-  }
-  
-  #header p {
-    font-size:1em;
-    margin: 0px;
-  }
   
   #header > div {
     margin-right:20px;
@@ -47,31 +26,10 @@ svg {
   
   #editor {
     /* display: flex; */
-    border: 3px solid #cccccc;
+    border: 4px solid #cccccc;
     border-bottom:none;
   }
-  
-  #svg-container {
-    width:50%;
-    max-width: 400px;
-    padding: 5px;
-    border-bottom:none;
-    border-right: none;
-  }
-  
-  #code {
-    border-bottom:none;
-    border-left:none;
-    padding:5px;
-    width:50%;
-    height: 400px;
-  }
-  
-  #code{
-    height: 100%;
-    font-size: 1.4em;
-  }
-  
+
   #process {
     display: flex;
     font-family: Baskerville, 'Times New Roman', serif;
@@ -79,13 +37,13 @@ svg {
   
   #process > div {
     width:25%;
-    border-top: 3px solid #cccccc;
-    border-left: 3px solid #cccccc;
-    border-bottom: 3px solid #cccccc;
+    border-top: 4px solid #cccccc;
+    border-left: 4px solid #cccccc;
+    border-bottom: 4px solid #cccccc;
   }
   
   #process > div:last-child {
-    border-right: 3px solid #cccccc;
+    border-right: 4px solid #cccccc;
   }
   
   #process > div > h2 {
@@ -94,19 +52,19 @@ svg {
     white-space: nowrap;
     font-size: 1.1em;
     margin:0px;
-  }n
+  }
   
   #process{
     width:100%;
   }
   
   .error {
-    background-color: #e94c43;
-    color:#fff;
+    background-color: #e94c43 !important;
+    /* color:#fff; */
   }
   
   .success {
-    background-color: #3D9970;
+    background-color: #3D9970 !important;
   }
   
   .message {
@@ -116,6 +74,7 @@ svg {
     padding:5px;
     color: #fff;
   }
+
 
   #tokens{
       width: 100%;
@@ -139,3 +98,16 @@ svg {
     justify-content: center;  
 }
 
+body{
+  background-color: white;
+}
+
+
+#code {
+  background: url(http://i.imgur.com/2cOaJ.png);
+  background-attachment: local;
+  background-repeat: no-repeat;
+  padding-left: 35px;
+  padding-top: 10px;
+  border-color:#ccc;
+}

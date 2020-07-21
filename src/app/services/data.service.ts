@@ -6,20 +6,51 @@ import { Router } from '@angular/router';
 })
 export class DataService {
   constructor(private router:Router) { }
-  private data;
-  private message;
+  private dataLex;
+  private messageLex;
 
-  setData(data,messaje){
-    this.data= data;
-    this.message=messaje;
+  private statusMessage;
+  private messageSin;
+
+  private statusMessageSem;
+  private messageSem;
+
+
+  setDataLex(data,messaje){
+    this.dataLex = data;
+    this.messageLex = messaje;
   }
 
-  getData(){
-    let temp = [this.data, this.message];
+  getDataLex(){
+    let temp = [this.dataLex, this.messageLex];
     this.clearData();
     return temp;
   }
+
+  setDataSin(messaje, status){
+    this.statusMessage = status;
+    this.messageSin = messaje;
+  }
+
+  getDataSin(){
+    let temp = [this.messageSin, this.statusMessage];
+    this.clearData();
+    return temp;
+  }
+
+  setDataSem(messaje,status){
+    this.messageSem = messaje;
+    this.statusMessageSem = status;
+  }
+
+  getDataSem(){
+    let temp = [this.messageSem, this.statusMessageSem];
+    this.clearData();
+    return temp;
+  }
+
+
   clearData(){
-    this.data = undefined;
+    this.dataLex = undefined;
   }
 }
