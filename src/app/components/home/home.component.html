@@ -5,26 +5,25 @@
     </div>
   </header>
   <div class="container">
+    <ngx-codemirror [(ngModel)]="cadena" [options]="{lineNumbers: true, theme: 'material',mode: 'markdown'}"></ngx-codemirror>
     <div class="abs-center">
       <div class="form-group">
-        <div class="input-group">
-          <textarea style="border: 4px solid #cccccc; font-family: Baskerville, 'Times New Roman', serif;"
-            class="form-control" [(ngModel)]="cadena" name="cadena" rows="10" cols="70"></textarea><br>
-        </div><br>
-        <button (click)="evaluar()" class="btn btn-outline-primary btn-lg" type="submit">Evaluar</button>
+
+        <button (click)="evaluar()" class="btn btn-lg" type="submit">Evaluar</button>
       </div>
     </div>
   </div>
 
-  <div id="process">
+  <div id="process" #process >
     <div>
       <h2>Tokens</h2>
-      <div id="tokens-msg" *ngIf="messageLex == 'Succesfully tokerized'; else elseBlock">
+      <div id="tokens-msg" *ngIf="messageLex == 'Lexic correct'; else elseBlock">
         <p class="message success">{{messageLex}}</p>
       </div>
       <ng-template #elseBlock>
         <p *ngIf="messageLex" class="message error">{{messageLex}}</p>
       </ng-template>
+      
       <textarea id="tokens" readonly rows="7" autofocus>{{dataLex | json}}</textarea>
     </div>
     <div>
@@ -49,17 +48,19 @@
     </div>
     <div>
       <h2>Output</h2>
-      <div id="sintax-msg" *ngIf="statusSin == 'Sintax correct'; else elseBlock2">
-        <p class="message success">{{messageSin}}</p>
+      <div id="sintax-msg" *ngIf="statusOutput == 'Generate file succes'; else elseBlock4">
+        <p class="message success" #p></p>
       </div>
-      <ng-template #elseBlock2>
-        <p *ngIf="messageSin" class="message error">{{messageSin}}</p>
+      <ng-template #elseBlock4>
+        <p *ngIf="messageOutput" class="message error">{{statusOutput}}</p>
       </ng-template>
-      <textarea id="tokens" readonly rows="7" autofocus>{{statusSin}}</textarea>
+      <textarea id="tokens" readonly rows="7" autofocus>{{messageOutput}}</textarea>
     </div>
 
   </div>
 </body>
 
-<a href="" #a></a> 
 <!-- <div id="code"></div> -->
+
+<a href="" #a class="a"></a>
+

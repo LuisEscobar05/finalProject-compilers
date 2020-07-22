@@ -1,4 +1,6 @@
   
+  @import '~codemirror/lib/codemirror';
+  @import '~codemirror/theme/material';
   #header {
     font-family: Baskerville, 'Times New Roman', serif;
     padding:5px;
@@ -81,6 +83,10 @@
       border-color: white;
       background-color: white;
       resize: none;
+      -webkit-tap-highlight-color: rgb(255, 255, 255);
+    }:focus { 
+      outline-color: transparent; 
+      outline-style: none;
     }
 
 
@@ -102,12 +108,13 @@ body{
   background-color: white;
 }
 
+.a{
+  color: white ;
+  /* text-shadow: black; */
+  font-weight: bold;
+}
 
-#code {
-  background: url(http://i.imgur.com/2cOaJ.png);
-  background-attachment: local;
-  background-repeat: no-repeat;
-  padding-left: 35px;
-  padding-top: 10px;
-  border-color:#ccc;
+.btn{
+  color: white;
+  background-color: #3D9970 !important;
 }

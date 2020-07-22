@@ -15,6 +15,9 @@ export class DataService {
   private statusMessageSem;
   private messageSem;
 
+  private statusMessageOutput;
+  private messageOutput;
+
 
   setDataLex(data,messaje){
     this.dataLex = data;
@@ -45,6 +48,17 @@ export class DataService {
 
   getDataSem(){
     let temp = [this.messageSem, this.statusMessageSem];
+    this.clearData();
+    return temp;
+  }
+
+  setDataOutput(messaje,status){
+    this.messageOutput = messaje;
+    this.statusMessageOutput = status;
+  }
+
+  getDataOutput(){
+    let temp = [this.messageOutput, this.statusMessageOutput];
     this.clearData();
     return temp;
   }

@@ -15,6 +15,8 @@ export class HomeComponent implements OnInit {
   simbolo;
   numero;
   @ViewChild('a') a: ElementRef;
+  @ViewChild('p') p: ElementRef;
+  @ViewChild('process') proccess: ElementRef;
   //var global
   cadena;
   iterator = 0;
@@ -48,7 +50,8 @@ export class HomeComponent implements OnInit {
   messageSem;
   statusSem;
   statusSin;
-
+  messageOutput;
+  statusOutput;
 
 
   //var semantic
@@ -58,13 +61,36 @@ export class HomeComponent implements OnInit {
   saveIteratorValues = [];
   saveIteratorAttrib = [];
   flagAccesSemantic = false;
-  constructor(private activatedRoute: ActivatedRoute, private router: Router, private dataService: DataService, private pila: StackService) { }
+  flagAccesOutput = false;
 
+
+  arrayObjects = [];
+  arrayNameProperties = [];
+  arrayNameAttribProperties = [];
+  arrayParametersValuesAux = [];
+  arrayParametersPropertiesAux = [];
+  arrayObjectsAtrrib = [];
+  arrayParametersAttribAux = [];
+
+  rplCadena;
+  constructor(private activatedRoute: ActivatedRoute, private router: Router, private dataService: DataService, private pila: StackService) { }
+  ngAfterViewInit() {
+    console.log("afterinit");
+
+  }
   ngOnInit(): void {
   }
   evaluar() {
+    this.arrayObjects = [];
+    this.arrayNameProperties = [];
+    this.arrayNameAttribProperties = [];
+    this.arrayParametersValuesAux = [];
+    this.arrayParametersPropertiesAux = [];
+    this.arrayObjectsAtrrib = [];
+    this.arrayParametersAttribAux = [];
+    this.flagAccesOutput = false;
     this.cadena = this.cadena;
-    this.cadena = this.cadena.replace(/(\r\n|\n|\r)/gm, "")
+    this.rplCadena = this.cadena;
     this.iterator = 0;
     this.pila.clear();
     this.resultadosLex = [];
@@ -84,17 +110,17 @@ export class HomeComponent implements OnInit {
       this.messageSin = this.dataService.getDataSin()[0];
       this.statusSin = this.dataService.getDataSin()[1];
     } else {
+      this.rplCadena = this.rplCadena.replace(/(\r\n|\n|\r)/gm, "")
       this.lexemas();
       this.dataService.setDataLex(this.resultadosLex, this.messageInfo);
       this.dataLex = this.dataService.getDataLex()[0];
       this.messageLex = this.dataService.getDataLex()[1];
       this.iterator = 0;
       this.resultadosLex = [];
-      this.auxiCadena = this.cadena.split(" ");
+      this.auxiCadena = this.rplCadena.split(" ");
       this.firstRule();
       this.iterator = 0;
       this.pila.clear();
-      // console.log(this.pila.stack)
       this.messageSin = this.dataService.getDataSin()[0];
       this.statusSin = this.dataService.getDataSin()[1];
       console.log(this.messageSin)
@@ -111,12 +137,31 @@ export class HomeComponent implements OnInit {
         this.statusSem = this.dataService.getDataSem()[1];
         this.flagAccesSemantic = false;
       }
+      if (!this.flagAccesOutput) {
+        this.statusOutput = "";
+        this.messageOutput = "No se paso el analisis semantico";
+        this.dataService.setDataOutput(this.messageOutput, this.statusOutput);
+        this.messageOutput = this.dataService.getDataOutput()[0];
+        this.statusOutput = this.dataService.getDataOutput()[1];
+      } else {
+        this.messageOutput = this.dataService.getDataOutput()[0];
+        this.statusOutput = this.dataService.getDataOutput()[1];
+        this.generateFile();
+        this.arrayObjects = [];
+        this.arrayNameProperties = [];
+        this.arrayNameAttribProperties = [];
+        this.arrayParametersValuesAux = [];
+        this.arrayParametersPropertiesAux = [];
+        this.arrayObjectsAtrrib = [];
+        this.arrayParametersAttribAux = [];
+        this.flagAccesOutput = false;
+      }
     }
   }
 
   //methods lexer
   lexemas() {
-    var auxiCadena = this.cadena.split(" ");
+    var auxiCadena = this.rplCadena.split(" ");
     this.saveString = auxiCadena;
     for (this.iterator = 0; this.iterator < auxiCadena.length; this.iterator++) {
       if (this.getTipo(auxiCadena[this.iterator])) {
@@ -144,27 +189,27 @@ export class HomeComponent implements OnInit {
 
   validarTipo(cadena) {
     if (cadena.match(this.reservadas)) {
-      this.messageInfo = "Succesfully tokerized";
+      this.messageInfo = "Lexic correct";
       this.tipo = "reservadas";
       this.valor = cadena;
       return true;
     } else if (cadena.match(this.identificador)) {
-      this.messageInfo = "Succesfully tokerized";
+      this.messageInfo = "Lexic correct";
       this.tipo = "identificador";
       this.valor = cadena;
       return true;
     } else if (cadena.match(this.agrupacion)) {
-      this.messageInfo = "Succesfully tokerized";
+      this.messageInfo = "Lexic correct";
       this.tipo = "agrupacion";
       this.valor = cadena;
       return true;
     } else if (cadena.match(this.simbolo)) {
-      this.messageInfo = "Succesfully tokerized";
+      this.messageInfo = "Lexic correct";
       this.tipo = "simbolo";
       this.valor = cadena;
       return true;
     } else if (cadena.match(this.numero)) {
-      this.messageInfo = "Succesfully tokerized";
+      this.messageInfo = "Lexic correct";
       this.tipo = "numero";
       this.valor = cadena;
       return true;
@@ -451,6 +496,7 @@ export class HomeComponent implements OnInit {
       if (this.expresionDospuntos()) {
         this.popData()//pop a :
         this.iterator++;
+        this.saveIteratorAttrib[0] = this.iterator;
         this.validarCrearAccederValoresAccederAtributos();
       } else {
         this.flagAccesSemantic = false;
@@ -525,11 +571,13 @@ export class HomeComponent implements OnInit {
       this.iterator++;
       this.validarCrearAccederValoresAccederAtributos();
     } else if (this.auxiCadena[this.iterator] == undefined || this.auxiCadena[this.iterator] == " ") {
+      this.saveIteratorAttrib[1] = this.iterator;
       this.popData()//pop A RestoValor final
       this.messageInfo = "Cadena aceptada";
+      // this.proccess.nativeElement.anima;
       this.statusSin = "Sintax correct"
       this.flagAccesSemantic = true;
-      this.init();
+      this.semanticMethods();
     }
   }
 
@@ -598,91 +646,129 @@ export class HomeComponent implements OnInit {
 
   //methods semantic
 
-  init() {
+  semanticMethods() {
     //Objects
-    // console.log(this.saveIteratorValues);
-    // console.log(this.saveString[this.saveIteratorValues[0]], this.saveString[this.saveIteratorValues[1]]);
-    var arrayObjects = new Array();
+    // console.log(this.saveIteratorAttrib);
+    // console.log(this.saveString[this.saveIteratorAttrib[0]], this.saveString[this.saveIteratorAttrib[1]]);
+    // var this.arrayObjects = new Array();
     var i = this.saveIteratorCreateObjects[0];
 
     var arrayValues = new Array();
     while (i < this.saveIteratorCreateObjects[1]) {
       if (this.saveString[i] != ",")
-        arrayObjects.push(this.saveString[i]);
+        this.arrayObjects.push(this.saveString[i]);
       i++;
     }
-    console.log(arrayObjects);
+    console.log(this.arrayObjects);
 
     //properties
     var arrayObjectsProperties = new Array();
     var j = this.saveIteratorPropertis[0];
-    var cadenita="";
-    while(j<this.saveIteratorPropertis[1]){
-      cadenita += this.saveString[j]+" ";
+    var cadenita = "";
+    while (j < this.saveIteratorPropertis[1]) {
+      cadenita += this.saveString[j] + " ";
       j++
     }
     var m = 0;
     var cadnSplit = cadenita.split(" ");
-    while(m < cadnSplit.length){
-      if(cadnSplit[m]=="("){
-        arrayObjectsProperties.push(cadnSplit[m-1]);
+    var arrayParametersProperties = new Array();
+    var aum = [];
+    while (m < cadnSplit.length) {
+      if (cadnSplit[m] == "(") {
+        aum.push(m - 1);
+        arrayObjectsProperties.push(cadnSplit[m - 1]);
       }
+      arrayParametersProperties.push(cadnSplit[m])
       m++;
     }
 
+    for (var jj = 0; jj < aum.length; jj++) {
+      arrayParametersProperties.splice(aum[jj], 1, '');
+    }
 
-
-    
+    // console.log(arrayParametersProperties);
     console.log(arrayObjectsProperties);
+
+
+    for (var ij = 0; ij < arrayParametersProperties.length; ij++) {
+      if (arrayParametersProperties[ij] != "(" && arrayParametersProperties[ij] != "," && arrayParametersProperties[ij] != "") {
+        this.arrayParametersPropertiesAux.push(arrayParametersProperties[ij]);
+      }
+    }
+
+    console.log(this.arrayParametersPropertiesAux)
+
+    var j2 = 0;
+    var cont = 0;
+    var arrayLengthProperties = new Array();
+    while (j2 < this.arrayParametersPropertiesAux.length) {
+      if (this.arrayParametersPropertiesAux[j2] == ")") {
+        arrayLengthProperties.push(cont);
+        cont = 0;
+        j2++;
+      }
+      cont++;
+      j2++;
+    }
+
+    var j2Aux = 0;
+    while (j2Aux < this.arrayParametersPropertiesAux.length) {
+      if (this.arrayParametersPropertiesAux[j2Aux] != ")") {
+        this.arrayNameProperties.push(this.arrayParametersPropertiesAux[j2Aux]);
+      }
+      j2Aux++;
+    }
+
+    console.log(this.arrayNameProperties);
+
 
     //values
     var k = this.saveIteratorValues[0];
     var parametersValues = new Array();
     var arrayObjectsValues = new Array();
 
-    var cadenita2="";
-    while(k<this.saveIteratorValues[1]){
-      cadenita2 += this.saveString[k]+" ";
+    var cadenita2 = "";
+    while (k < this.saveIteratorValues[1]) {
+      cadenita2 += this.saveString[k] + " ";
       k++
     }
     var m2 = 0;
     var cadnSplit2 = cadenita2.split(" ");
     var arrayParametersValues = new Array();
     var aum2 = [];
-    var cx=0;
-    while(m2 < cadnSplit2.length){
-      if(cadnSplit2[m2]=="("){
-        aum2.push(m2-1)
-        arrayObjectsValues.push(cadnSplit2[m2-1]);
+    var cx = 0;
+    while (m2 < cadnSplit2.length) {
+      if (cadnSplit2[m2] == "(") {
+        aum2.push(m2 - 1)
+        arrayObjectsValues.push(cadnSplit2[m2 - 1]);
       }
       arrayParametersValues.push(cadnSplit2[m2])
       m2++;
     }
-    
-    for (var jj = 0; jj<aum2.length;jj++){
-      arrayParametersValues.splice(aum2[jj],1,'');
+
+    for (var jj = 0; jj < aum2.length; jj++) {
+      arrayParametersValues.splice(aum2[jj], 1, '');
     }
 
-    console.log(arrayParametersValues);
+    // console.log(arrayParametersValues);
     console.log(arrayObjectsValues);
 
-    var arrayParametersValuesAux = new Array();
 
- 
-    for ( var ij = 0 ; ij <arrayParametersValues.length;ij++){
-      if(arrayParametersValues[ij]!="(" && arrayParametersValues[ij]!="," && arrayParametersValues[ij]!=""){
-        arrayParametersValuesAux.push(arrayParametersValues[ij]);
+
+    for (var ij = 0; ij < arrayParametersValues.length; ij++) {
+      if (arrayParametersValues[ij] != "(" && arrayParametersValues[ij] != "," && arrayParametersValues[ij] != "") {
+        this.arrayParametersValuesAux.push(arrayParametersValues[ij]);
       }
     }
 
-    
-    console.log(arrayParametersValuesAux)
+
+    console.log(this.arrayParametersValuesAux)
 
     var k2 = 0;
     var cont2 = 0;
     var arrayLengthPropertiesValues = new Array();
-    while (k2 < arrayParametersValuesAux.length) {
-      if ( arrayParametersValuesAux[k2]==")") {
+    while (k2 < this.arrayParametersValuesAux.length) {
+      if (this.arrayParametersValuesAux[k2] == ")") {
         arrayLengthPropertiesValues.push(cont2);
         cont2 = 0;
         k2++;
@@ -691,41 +777,225 @@ export class HomeComponent implements OnInit {
       k2++;
     }
 
+
     console.log(arrayLengthPropertiesValues);
 
+    //ACCEDERATRIBUTOS
+
+
+    var p = this.saveIteratorAttrib[0];
+    var cadenita = "";
+    while (p < this.saveIteratorAttrib[1]) {
+      cadenita += this.saveString[p] + " ";
+      p++
+    }
+    var c = 0;
+    var cadnSplit3 = cadenita.split(" ");
+    var arrayParametersAttrib = new Array();
+    var auc = [];
+    while (c < cadnSplit3.length) {
+      if (cadnSplit3[c] == "(") {
+        auc.push(c - 1);
+        this.arrayObjectsAtrrib.push(cadnSplit3[c - 1]);
+      }
+      arrayParametersAttrib.push(cadnSplit3[c])
+      c++;
+    }
+
+    for (var jj = 0; jj < auc.length; jj++) {
+      arrayParametersAttrib.splice(auc[jj], 1, '');
+    }
+
+    // console.log(arrayParametersAttrib);
+    console.log(this.arrayObjectsAtrrib);
+
+
+    for (var ij = 0; ij < arrayParametersAttrib.length; ij++) {
+      if (arrayParametersAttrib[ij] != "(" && arrayParametersAttrib[ij] != "," && arrayParametersAttrib[ij] != "") {
+        this.arrayParametersAttribAux.push(arrayParametersAttrib[ij]);
+      }
+    }
+
+    console.log(this.arrayParametersAttribAux)
+
+    var j3 = 0;
+    // var cont3 = 0;
+    console.log(this.arrayParametersAttribAux.length);
+    while (j3 < this.arrayParametersAttribAux.length) {
+      if (this.arrayParametersAttribAux[j3] != ")") {
+        this.arrayNameAttribProperties.push(this.arrayParametersAttribAux[j3]);
+      }
+      j3++;
+    }
+
+    console.log(this.arrayNameAttribProperties);
+
+
+
     //conditions 
-    if (arrayObjects.length == arrayObjectsProperties.length) {
+    if (this.arrayObjects.length == arrayObjectsProperties.length) {
       this.statusSem = "Semantic correct";
       this.messageSem = "Todo correcto";
+      this.flagAccesOutput = true;
       this.dataService.setDataSem(this.messageSem, this.statusSem);
+      var ku = 0;
+      var band = false;
+      while (ku < this.arrayObjects.length) {
+        if (this.arrayObjects[ku] == arrayObjectsProperties[ku]) {
+          band = true;
+        } else {
+          band = false;
+          ku++;
+        }
+        ku++;
+      }
+      if (!band) {
+        this.statusSem = "Semantic incorrect";
+        this.messageSem = "El nombre de los objetos de PROPIEDADES no coincide con el nombre de los objetos de CREAROBJETOS";
+        this.flagAccesOutput = false;
+        this.dataService.setDataSem(this.messageSem, this.statusSem);
+      } else {
+        if (this.arrayObjects.length != arrayObjectsValues.length) {
+          this.statusSem = "Semantic incorrect";
+          this.flagAccesOutput = false;
+          this.messageSem = "El numero de objetos de VALORES no coincide con el numero de objetos en PROPIEDADES";
+          this.dataService.setDataSem(this.messageSem, this.statusSem);
+        } else {
+          var ko = 0;
+          var band2 = false;
+          while (ko < arrayLengthProperties.length) {
+            if (arrayLengthPropertiesValues[ko] == arrayLengthProperties[ko]) {
+              band2 = true;
+            } else {
+              band2 = false;
+              ko++;
+            }
+            ko++;
+          }
+          if (!band2) {
+            this.statusSem = "Semantic incorrect";
+            this.flagAccesOutput = false;
+            this.messageSem = "El numero de parametros de los objetos de VALORES no coincide con el numero de parametros de los objetos de PROPIEDADES";
+            this.dataService.setDataSem(this.messageSem, this.statusSem);
+          } else {
+            var ka = 0;
+            var bande = false;
+            while (ka < arrayObjectsProperties.length) {
+              if (arrayObjectsValues[ka] == arrayObjectsProperties[ka]) {
+                bande = true;
+              } else {
+                bande = false;
+                ka++;
+              }
+              ka++;
+            }
+            if (!bande) {
+              this.statusSem = "Semantic incorrect";
+              this.flagAccesOutput = false;
+              this.messageSem = "El nombre de los objetos de VALORES no coincide con el nombre de los objetos de PROPIEDADES";
+              this.dataService.setDataSem(this.messageSem, this.statusSem);
+            } else {
+              if (this.arrayObjectsAtrrib.length > arrayObjectsValues.length) {
+                this.statusSem = "Semantic incorrect";
+                this.flagAccesOutput = false;
+                this.messageSem = "El numero de objetos en ACCEDERATRIBUTOS no puede ser mayor que el de VALORES";
+                this.dataService.setDataSem(this.messageSem, this.statusSem);
+              } else {
+                if (this.arrayNameAttribProperties.length > this.arrayNameProperties.length) {
+                  this.statusSem = "Semantic incorrect";
+                  this.flagAccesOutput = false;
+                  this.messageSem = "El numero de parametros de ACCEDERATRIBUTOS no puede ser mayor al de PROPIEDADES";
+                  this.dataService.setDataSem(this.messageSem, this.statusSem);
+                } else {
+                  var ka2 = 0;
+                  var bande2 = true;
+                  var tempInde = [];
+                  while (ka2 < this.arrayNameAttribProperties.length) {
+                    tempInde.push(this.arrayNameProperties.indexOf(this.arrayNameAttribProperties[ka2]))
+                    ka2++;
+                  }
+                  for (var kj = 0; kj < tempInde.length; kj++) {
+                    if (tempInde[kj] < 0) {
+                      bande2 = false;
+                    }
+                  }
+
+                  if (!bande2) {
+                    this.statusSem = "Semantic incorrect";
+                    this.flagAccesOutput = false;
+                    this.messageSem = "El nombre de los parametros de ACCEDERATRIBUTOS no coincide con los de PROPIEDADES";
+                    this.dataService.setDataSem(this.messageSem, this.statusSem);
+                  }
+                }
+              }
+            }
+          }
+
+        }
+      }
     } else {
       this.statusSem = "Semantic incorrect";
-      this.messageSem = "El numero de objetos no coincide con el numero de objetos en propiedades";
+      this.flagAccesOutput = false;
+      this.messageSem = "El numero de objetos en PROPIEDADES no coincide con el numero de objetos en CREAROBJETOS";
       this.dataService.setDataSem(this.messageSem, this.statusSem);
     }
-    
-
-
 
   }
 
-  test() {
-    var ss = "var car = { name: 'ford'}"
-    // creas el fichero con la API File
-    var file = new File([ss], "hello world.js", { type: "text/plain;charset=utf-8" });
+  generateFile() {
+    var msjObjects = "// Create an object\n";
+    var j = 0;
+    var p = 0;
+    for (var i = 0; i < this.arrayObjects.length; i++) {
+      msjObjects += "\nvar " + this.arrayObjects[i] + "= " + "{"
+      console.log(j)
+      while (j < this.arrayParametersPropertiesAux.length) {
+        if (this.arrayParametersPropertiesAux[j] != ")") {
+          msjObjects += "\n" + "\t" + this.arrayParametersPropertiesAux[j] + ":";
+          msjObjects += "'" + this.arrayParametersValuesAux[j] + "'" + ",";
+        } else {
+          j++;
+          break;
+        }
+        j++
+      }
+      msjObjects += "\n};\n";
+    }
 
-    // obtienes una URL para el fichero que acabas de crear
+    msjObjects += "\n\n//Accesing Object Properties\n\n"
+    var mi = 0;
+    for (var m = 0; m < this.arrayObjectsAtrrib.length; m++) {
+      while (mi < this.arrayParametersAttribAux.length) {
+        if (this.arrayParametersAttribAux[mi] != ")") {
+          var iniName = this.arrayObjectsAtrrib[m];
+          console.log(iniName)
+          msjObjects += "var " + iniName.charAt(0).toUpperCase() + this.arrayObjectsAtrrib[m] + "= ";
+          msjObjects += this.arrayObjectsAtrrib[m] + "." + this.arrayParametersAttribAux[mi] + ";\n";
+        } else {
+          if (this.arrayParametersAttribAux[mi] == ")") {
+            m++;
+          }
+
+        }
+        mi++;
+      }
+    }
+
+    this.messageOutput = msjObjects;
+    var file = new File([this.messageOutput], "file.js", { type: "text/plain;charset=utf-8" });
     var url = window.URL.createObjectURL(file);
-
-    // // creas un enlace y lo añades al documento
-    // var a = document.createElement("a");
-    // document.body.appendChild(a);
-
-    // actualizas los parámetros del enlace para descargar el fichero creado
+    this.statusOutput = "Generate file succes";
     this.a.nativeElement.href = url;
-    this.a.nativeElement.innerHTML = "Descargar archivo.js";
+    this.a.nativeElement.innerHTML = "Download file.js";
     this.a.nativeElement.download = file.name;
+    setTimeout(() => {
+      this.p.nativeElement.append(this.a.nativeElement);
+    }, 100);
     console.log(this.a.nativeElement.href)
+  }
+
+  test() {
+
   }
 
   // Ejemplo de entrada:
