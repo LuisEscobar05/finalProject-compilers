@@ -39,6 +39,7 @@ export class HomeComponent implements OnInit {
   banderaParentesisApertura = 0;
   banderaParentesisCierre = 0;
   banderaRestoIdentificador = 0;
+  seconRoad = false;
 
   //services
   dataLex;
@@ -91,6 +92,9 @@ export class HomeComponent implements OnInit {
       this.resultadosLex = [];
       this.auxiCadena = this.cadena.split(" ");
       this.firstRule();
+      this.iterator = 0;
+      this.pila.clear();
+      // console.log(this.pila.stack)
       this.messageSin = this.dataService.getDataSin()[0];
       this.statusSin = this.dataService.getDataSin()[1];
       console.log(this.messageSin)
@@ -194,11 +198,10 @@ export class HomeComponent implements OnInit {
     if (this.auxiCadena[this.iterator] == "CREAROBJETOS") {
       this.popData()// pop a CREAROBJETOS
       this.iterator++;
-      this.validarDosPuntos();
+      this.validarDosPuntosCrearObjetos();
       this.dataService.setDataSin(this.messageInfo, this.statusSin);
-      this.iterator = 0;
-      this.pila.clear();
     } else {
+      this.flagAccesSemantic = false;
       this.statusSin = "Sintax error";
       this.messageInfo = "Error sintactico --> " + this.auxiCadena[this.iterator] + ", Deberia ser CREAROBJETOS";
       this.dataService.setDataSin(this.messageInfo, this.statusSin);
@@ -206,18 +209,15 @@ export class HomeComponent implements OnInit {
       this.pila.clear();
     }
   }
-  validarDosPuntos() {
-    if (this.auxiCadena[this.iterator] == ":") {
+
+
+  validarDosPuntosCrearObjetos() {
+    if (this.expresionDospuntos()) {
       this.popData()// pop a :
       this.iterator++;
-      if (this.banderaDosPuntos == 0) {
-        this.validarCrear();
-      } else if (this.banderaDosPuntos == 1) {
-        this.validarCrearAccederValores();
-      } else if (this.banderaDosPuntos == 2) {
-        this.validarAsignarValores();
-      }
+      this.validarCrear();
     } else {
+      this.flagAccesSemantic = false;
       this.error();
     }
   }
@@ -228,65 +228,49 @@ export class HomeComponent implements OnInit {
       this.popData()// pop a CREAR
       this.pushData("RestoIdentificador");
       this.pushData("Identificador");
-      this.validarIdentificador();
-    } else {
-      this.error();
-    }
-  }
-
-  validarIdentificador() {
-    if (this.expresionIdentificador()) {
-      this.popData()// pop a Identificador
+      this.popData()// Identificador
       this.iterator++;
-      if (this.banderaIdentificador == 0) {
-        this.validarRestoIdentificador();
-      } else if (this.banderaIdentificador == 1) {
-        this.banderaRestoIdentificador = 1;
-        this.validarParentesisApertura();
-      }
+      this.validarRestoIdentificadorCrear();
     } else {
+      this.flagAccesSemantic = false;
       this.error();
     }
   }
 
-  validarRestoIdentificador() {
+  validarRestoIdentificadorCrear() {
     if (this.auxiCadena[this.iterator] == ",") {
       this.iterator++;
       if (this.expresionIdentificador()) {
         this.iterator++;
-        this.validarRestoIdentificador();
+        this.validarRestoIdentificadorCrear();
       } else {
+        this.flagAccesSemantic = false;
         this.error()
       }
     } else {
-      if (this.auxiCadena[this.iterator] == "PROPIEDADES" || this.auxiCadena[this.iterator] == ")") {
+      if (this.auxiCadena[this.iterator] == "PROPIEDADES") {
+        this.saveIteratorCreateObjects[1] = this.iterator;
         this.popData()// pop a RestoIdentificador
-        if (this.banderaRestoIdentificador == 0) {
-          this.validarPropiedades();
-        } else if (this.banderaRestoIdentificador == 1) {
-          this.banderaParentesisCierre = 0;
-          this.validarParentesisCierre();
+        this.popData()//pop a PROPIEADES
+        this.iterator++;
+        this.saveIteratorPropertis[0] = this.iterator + 1;
+        if (this.expresionDospuntos()) {
+          this.popData(); //pop a :
+          this.iterator++;
+          this.validarCrearAccederValoresPropiedades();
+        } else {
+          this.flagAccesSemantic = false;
+          this.error();
         }
       } else {
+        this.flagAccesSemantic = false;
+        this.popData()// pop a RestoIdentificador
         this.error();
       }
     }
   }
 
-  validarPropiedades() {
-    if (this.auxiCadena[this.iterator] == "PROPIEDADES") {
-      this.saveIteratorCreateObjects[1] = this.iterator;
-      this.popData()// pop a PROPIEDADES
-      this.iterator++;
-      this.saveIteratorPropertis[0] = this.iterator + 1;
-      this.banderaDosPuntos = 1;
-      this.validarDosPuntos();
-    } else {
-      this.error()
-    }
-  }
-
-  validarCrearAccederValores() {
+  validarCrearAccederValoresPropiedades() {
     if (this.expresionIdentificador()) {
       this.popData() // pop a CREARACCEDERVALORES
       this.pushData("RestoValor");
@@ -295,98 +279,95 @@ export class HomeComponent implements OnInit {
       this.pushData("Identificador");
       this.pushData("(");
       this.pushData("Identificador");
-      this.banderaIdentificador = 1;
-      this.validarIdentificador()
-    } else {
-      this.error();
-    }
-  }
-
-  validarParentesisApertura() {
-    if (this.auxiCadena[this.iterator] == "(") {
-      this.popData()//pop a (
+      this.popData()//pop a Identificador;
       this.iterator++;
-      if (this.banderaParentesisApertura == 0) {
-        this.banderaIdentificador = 0;
-        this.validarIdentificador();
-      } else if (this.banderaParentesisApertura = 1) {
-        this.validarTipoAtributo();
+      if (this.expresionParentesisApertura()) {
+        this.popData()//pop a (
+        this.iterator++;
+        if (this.expresionIdentificador()) {
+          this.popData()//pop a identificador
+          this.iterator++;
+          this.validarRestoIdentificadorCrearAccederValores();
+        } else {
+          this.flagAccesSemantic = false;
+          this.error();
+        }
+      } else {
+        this.flagAccesSemantic = false;
+        this.error();
       }
     } else {
+      this.flagAccesSemantic = false;
       this.error();
     }
   }
 
-  validarParentesisCierre() {
-    if (this.auxiCadena[this.iterator] == ")") {
-      this.popData()//pop a )
-      this.iterator++;
-      if (this.banderaParentesisCierre == 0) {
-        this.validarRestoValor();
-      } else if (this.banderaParentesisCierre == 1) {
-        this.validarRestoAsignarValores();
-      }
-    } else {
-      this.error();
-    }
-  }
-
-  validarRestoValor() {
+  validarRestoIdentificadorCrearAccederValores() {
     if (this.auxiCadena[this.iterator] == ",") {
       this.iterator++;
       if (this.expresionIdentificador()) {
-        this.validarCrearAccederValores();
+        this.iterator++;
+        this.validarRestoIdentificadorCrearAccederValores();
       } else {
+        this.flagAccesSemantic = false;
         this.error()
       }
     } else {
-      if (this.auxiCadena[this.iterator] == "VALORES" || this.auxiCadena[this.iterator] == ")") {
-        this.popData()//pop A RestoValor
-        this.validarValores();
-      } else if (this.auxiCadena[this.iterator] == undefined && this.pila.peek() == "RestoValor" && this.pila.size() == 1) {
-        this.popData()//pop A RestoValor final
-        this.messageInfo = "Cadena aceptada";
-        this.statusSin = "Sintax correct"
-        this.flagAccesSemantic = true;
-        this.init();
+      console.log(this.auxiCadena[this.iterator])
+      if (this.expresionParentesisCierre()) {
+        this.popData()// pop a RestoIdentificador
+        this.iterator++;
+        this.popData()//pop a )
+        this.validarRestoValor1();
       } else {
+        this.flagAccesSemantic = false;
+        this.popData()// pop a RestoIdentificador
         this.error();
       }
     }
   }
 
-  validarValores() {
-    if (this.auxiCadena[this.iterator] == "VALORES" || this.auxiCadena[this.iterator] == ")") {
+  validarRestoValor1() {
+    if (this.auxiCadena[this.iterator] == ",") {
+      this.popData()//pop a restoValor
+      this.iterator++;
+      this.validarCrearAccederValoresPropiedades();
+    } else if (this.auxiCadena[this.iterator] == "VALORES") {
+      this.saveIteratorPropertis[1] = this.iterator;
       this.popData()//pop a VALORES;
-      this.banderaDosPuntos = 2;
-      if (this.auxiCadena[this.iterator] == "VALORES") {
-        this.saveIteratorPropertis[1] = this.iterator;
+      this.iterator++;
+      this.saveIteratorValues[0] = this.iterator + 1;
+      if (this.expresionDospuntos()) {
+        this.popData()//pop a :
         this.iterator++;
-        this.saveIteratorValues[0] = this.iterator + 1;
-        this.validarDosPuntos();
-      } else if (this.auxiCadena[this.iterator] == ")") {
-        this.banderaParentesisCierre = 1;
-        this.validarParentesisCierre();
+        this.validarAsignarValores();
+      } else {
+        this.flagAccesSemantic = false;
+        this.error();
       }
-
-    } else {
-      this.error();
     }
   }
 
   validarAsignarValores() {
     if (this.expresionIdentificador()) {
       this.popData()//pop ASIGNARVALORES
-      this.iterator++;
       this.pushData("RestoAsignarValores");
       this.pushData(")");
       this.pushData("TipoAtributo");
       this.pushData("(");
       this.pushData("Identificador");
       this.popData()//pop a Identificador
-      this.banderaParentesisApertura = 1;
-      this.validarParentesisApertura();
+      this.iterator++;
+      if (this.expresionParentesisApertura()) {
+        this.popData()//pop a (
+        this.iterator++;
+        this.validarTipoAtributo();
+      } else {
+        this.flagAccesSemantic = false;
+        this.error();
+      }
     } else {
+      this.flagAccesSemantic = false;
       this.error();
     }
   }
@@ -411,12 +392,14 @@ export class HomeComponent implements OnInit {
       this.pushData("RestoTipoAtributo");
       this.pushData("S");
       this.popData()//pop S
+      // console.log(this.auxiCadena[this.iterator])
       this.firstRule();
       this.validarRestoTipoAtributo();
     } else {
+      this.flagAccesSemantic = false;
+      console.log("a")
       this.error();
     }
-
   }
 
   validarRestoTipoAtributo() {
@@ -427,10 +410,15 @@ export class HomeComponent implements OnInit {
       this.pushData(",");
       this.popData()//pop a ,
       this.validarTipoAtributo()
-    } else if (this.auxiCadena[this.iterator] == ")") {
+    } else if (this.expresionParentesisCierre()) {
       this.popData()//pop a RestoTipoAtributo
-      this.banderaParentesisCierre = 1;
-      this.validarParentesisCierre();
+      this.iterator++;
+      this.popData()//pop a )
+      this.validarRestoAsignarValores();
+    } else {
+      this.flagAccesSemantic = false;
+      this.popData()// pop a RestoIdentificador
+      this.error()
     }
   }
 
@@ -440,6 +428,7 @@ export class HomeComponent implements OnInit {
       if (this.expresionIdentificador()) {
         this.validarAsignarValores();
       } else {
+        this.flagAccesSemantic = false;
         this.error()
       }
     } else {
@@ -447,6 +436,8 @@ export class HomeComponent implements OnInit {
         this.popData()//pop A RestoAsignarValores
         this.validarAccederAtributos();
       } else {
+        this.flagAccesSemantic = false;
+        this.popData()// pop a RestoIdentificador
         this.error();
       }
     }
@@ -457,11 +448,88 @@ export class HomeComponent implements OnInit {
       this.popData()//pop a ACCEDERATRIBUTOS;
       this.saveIteratorValues[1] = this.iterator;
       this.iterator++;
-      this.banderaDosPuntos = 1;
-      this.banderaParentesisApertura = 0;
-      this.validarDosPuntos();
+      if (this.expresionDospuntos()) {
+        this.popData()//pop a :
+        this.iterator++;
+        this.validarCrearAccederValoresAccederAtributos();
+      } else {
+        this.flagAccesSemantic = false;
+        this.error();
+      }
     } else {
+      this.flagAccesSemantic = false;
       this.error();
+    }
+  }
+
+  validarCrearAccederValoresAccederAtributos() {
+    if (this.expresionIdentificador()) {
+      this.popData() // pop a CREARACCEDERVALORES
+      this.pushData("RestoValor");
+      this.pushData(")");
+      this.pushData("RestoIdentificador");
+      this.pushData("Identificador");
+      this.pushData("(");
+      this.pushData("Identificador");
+      this.popData()//pop a Identificador;
+      this.iterator++;
+      if (this.expresionParentesisApertura()) {
+        this.popData()//pop a (
+        this.iterator++;
+        if (this.expresionIdentificador()) {
+          this.popData()//pop a identificador
+          this.iterator++;
+          this.validarRestoIdentificadorAccederAtributos();
+        } else {
+          this.flagAccesSemantic = false;
+          this.error();
+        }
+      } else {
+        this.flagAccesSemantic = false;
+        this.error();
+      }
+    } else {
+      this.flagAccesSemantic = false;
+      this.error();
+    }
+  }
+
+  validarRestoIdentificadorAccederAtributos() {
+    if (this.auxiCadena[this.iterator] == ",") {
+      this.iterator++;
+      if (this.expresionIdentificador()) {
+        this.iterator++;
+        this.validarRestoIdentificadorAccederAtributos();
+      } else {
+        this.flagAccesSemantic = false;
+        this.error()
+      }
+    } else {
+      if (this.expresionParentesisCierre()) {
+        this.popData()// pop a RestoIdentificador
+        this.popData()//pop a )
+        this.iterator++;
+        console.log(this.auxiCadena[this.iterator]);
+        this.validarRestoValor2();
+      } else {
+        this.flagAccesSemantic = false;
+        this.popData()// pop a RestoIdentificador
+        this.error();
+      }
+    }
+  }
+
+  validarRestoValor2() {
+    if (this.auxiCadena[this.iterator] == ",") {
+      this.popData()//pop a restoValor
+      this.iterator++;
+      this.validarCrearAccederValoresAccederAtributos();
+    } else if (this.auxiCadena[this.iterator] == undefined || this.auxiCadena[this.iterator] == " ") {
+      this.popData()//pop A RestoValor final
+      this.messageInfo = "Cadena aceptada";
+      this.statusSin = "Sintax correct"
+      this.flagAccesSemantic = true;
+      this.init();
     }
   }
 
@@ -483,12 +551,37 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  expresionDospuntos() {
+    var dos = /^:$/
+    if (this.auxiCadena[this.iterator] == ":") {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  expresionParentesisApertura() {
+    var aper = /^\($/
+    if (this.auxiCadena[this.iterator] == "(") {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  expresionParentesisCierre() {
+    var cierr = /^\($/
+    if (this.auxiCadena[this.iterator] == ")") {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   pushData(dato) {
     this.pila.push(dato);
     this.message = "entra: " + this.pila.peek();
     this.transicion = [this.message];
     this.resultadosSin.push(this.transicion);
-    // console.log(this.resultadosSin);
   }
 
   popData() {
@@ -496,7 +589,6 @@ export class HomeComponent implements OnInit {
     this.pila.pop();
     this.transicion = [this.message];
     this.resultadosSin.push(this.transicion);
-    // console.log(this.resultadosSin);
   }
 
   error() {
@@ -524,79 +616,73 @@ export class HomeComponent implements OnInit {
     //properties
     var arrayObjectsProperties = new Array();
     var j = this.saveIteratorPropertis[0];
-    var ite = 0;
-    var parametersPropertis = new Array();
-
-    while (j < this.saveIteratorPropertis[1]) {
-
-      if (this.saveString[j] != "," && this.saveString[j] == arrayObjects[ite]) {
-        arrayObjectsProperties.push(this.saveString[j]);
-        ite++;
-      } else {
-        parametersPropertis.push(this.saveString[j]);
+    var cadenita="";
+    while(j<this.saveIteratorPropertis[1]){
+      cadenita += this.saveString[j]+" ";
+      j++
+    }
+    var m = 0;
+    var cadnSplit = cadenita.split(" ");
+    while(m < cadnSplit.length){
+      if(cadnSplit[m]=="("){
+        arrayObjectsProperties.push(cadnSplit[m-1]);
       }
-      j++;
+      m++;
     }
 
-    console.log(parametersPropertis);
+
+
+    
     console.log(arrayObjectsProperties);
-
-    var arrayParametersPropertiesAux = new Array();
-
-    for (var ij = 0; ij < parametersPropertis.length; ij++) {
-      if (parametersPropertis[ij] != "(" && parametersPropertis[ij] != ",") {
-        arrayParametersPropertiesAux.push(parametersPropertis[ij]);
-      }
-    }
-
-    var j2 = 0;
-    var cont = 0;
-    var arrayLengthPropertiesParameters = new Array();
-    while (j2 < arrayParametersPropertiesAux.length) {
-      if (arrayParametersPropertiesAux[j2] == ")") {
-        arrayLengthPropertiesParameters.push(cont);
-        cont = 0;
-        j2++;
-      }
-      cont++;
-      j2++;
-    }
-
-    console.log(arrayLengthPropertiesParameters);
-    console.log(arrayParametersPropertiesAux)
 
     //values
     var k = this.saveIteratorValues[0];
     var parametersValues = new Array();
     var arrayObjectsValues = new Array();
-    var x = 0;
-    while (k < this.saveIteratorValues[1]) {
 
-      if (this.saveString[k] != "," && this.saveString[k] == arrayObjects[x]) {
-        arrayObjectsValues.push(this.saveString[k]);
-        x++;
-      } else {
-        parametersValues.push(this.saveString[k]);
+    var cadenita2="";
+    while(k<this.saveIteratorValues[1]){
+      cadenita2 += this.saveString[k]+" ";
+      k++
+    }
+    var m2 = 0;
+    var cadnSplit2 = cadenita2.split(" ");
+    var arrayParametersValues = new Array();
+    var aum2 = [];
+    var cx=0;
+    while(m2 < cadnSplit2.length){
+      if(cadnSplit2[m2]=="("){
+        aum2.push(m2-1)
+        arrayObjectsValues.push(cadnSplit2[m2-1]);
       }
-      k++;
+      arrayParametersValues.push(cadnSplit2[m2])
+      m2++;
+    }
+    
+    for (var jj = 0; jj<aum2.length;jj++){
+      arrayParametersValues.splice(aum2[jj],1,'');
     }
 
-    console.log(parametersValues)
-    console.log(arrayObjectsValues)
-
+    console.log(arrayParametersValues);
+    console.log(arrayObjectsValues);
 
     var arrayParametersValuesAux = new Array();
-    for (var ij = 0; ij < parametersValues.length; ij++) {
-      if (parametersValues[ij] != "(" && parametersValues[ij] != ",") {
-        arrayParametersValuesAux.push(parametersValues[ij]);
+
+ 
+    for ( var ij = 0 ; ij <arrayParametersValues.length;ij++){
+      if(arrayParametersValues[ij]!="(" && arrayParametersValues[ij]!="," && arrayParametersValues[ij]!=""){
+        arrayParametersValuesAux.push(arrayParametersValues[ij]);
       }
     }
+
+    
+    console.log(arrayParametersValuesAux)
 
     var k2 = 0;
     var cont2 = 0;
     var arrayLengthPropertiesValues = new Array();
     while (k2 < arrayParametersValuesAux.length) {
-      if (arrayParametersValuesAux[k2] == ")") {
+      if ( arrayParametersValuesAux[k2]==")") {
         arrayLengthPropertiesValues.push(cont2);
         cont2 = 0;
         k2++;
@@ -606,7 +692,6 @@ export class HomeComponent implements OnInit {
     }
 
     console.log(arrayLengthPropertiesValues);
-    console.log(arrayParametersValuesAux)
 
     //conditions 
     if (arrayObjects.length == arrayObjectsProperties.length) {
@@ -618,6 +703,7 @@ export class HomeComponent implements OnInit {
       this.messageSem = "El numero de objetos no coincide con el numero de objetos en propiedades";
       this.dataService.setDataSem(this.messageSem, this.statusSem);
     }
+    
 
 
 
